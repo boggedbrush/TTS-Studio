@@ -1,0 +1,23 @@
+# AMD GPU (ROCm) override for docker-compose.yml
+# Usage: docker compose -f docker-compose.yml -f docker-compose.amd.yml up --build
+
+version: '3.8'
+
+services:
+  backend:
+    # Override the build to use ROCm base image
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.rocm
+    # AMD GPU passthrough
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    environment:
+      - HSA_OVERRIDE_GFX_VERSION=10.3.0  # Adjust for your GPU
+      - PYTORCH_ROCM_ARCH=gfx1030        # Adjust for your GPU
+    # Remove NVIDIA-specific deploy config
+    deploy: {}

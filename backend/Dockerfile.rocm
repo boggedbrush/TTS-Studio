@@ -1,0 +1,25 @@
+# ROCm base image for AMD GPUs
+FROM rocm/pytorch:rocm6.0_ubuntu22.04_py3.10_pytorch_2.1.1
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    libsndfile1 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy requirements (excluding torch as it's in base image)
+COPY requirements.txt .
+
+# Install dependencies (torch already installed in base image)
+RUN pip install --no-cache-dir --ignore-installed $(grep -v '^torch' requirements.txt | tr '\n' ' ')
+
+# Copy application code
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
