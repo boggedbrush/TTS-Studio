@@ -1,4 +1,6 @@
-version: '3.8'
+# Base docker-compose configuration (no GPU-specific settings)
+# Use with -f docker-compose.nvidia.yml for NVIDIA GPUs
+# Use with -f docker-compose.amd.yml for AMD GPUs (ROCm)
 
 services:
   frontend:
@@ -9,6 +11,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
+      - BACKEND_URL=http://backend:8000
     depends_on:
       - backend
 
@@ -18,18 +21,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - CUDA_VISIBLE_DEVICES=0
     volumes:
       - huggingface-cache:/root/.cache/huggingface
-    # NVIDIA GPU support
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
 
 volumes:
   huggingface-cache:

@@ -1,6 +1,8 @@
 import type { VoiceDesignInput, VoiceCloneInput, CustomVoiceInput } from "./validators";
 
-const API_BASE = "/api";
+// In production/Docker, we call the backend directly to avoid proxy timeouts
+// The backend is exposed on port 8000
+const API_BASE = typeof window !== "undefined" ? "http://localhost:8000/api" : "/api";
 
 export interface GenerationResult {
     audio: Blob;

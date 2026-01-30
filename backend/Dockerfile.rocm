@@ -1,5 +1,5 @@
 # ROCm base image for AMD GPUs
-FROM rocm/pytorch:rocm6.0_ubuntu22.04_py3.10_pytorch_2.1.1
+FROM rocm/pytorch:rocm7.1_ubuntu22.04_py3.10_pytorch_release_2.9.1
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
@@ -12,8 +12,15 @@ WORKDIR /app
 # Copy requirements (excluding torch as it's in base image)
 COPY requirements.txt .
 
-# Install dependencies (torch already installed in base image)
-RUN pip install --no-cache-dir --ignore-installed $(grep -v '^torch' requirements.txt | tr '\n' ' ')
+# Install dependencies strictly avoiding torch upgrades
+# 1. Remove torch/torchvision/torchaudio from requirements.txt
+# 2. Install remaining requirements
+# 3. Install qwen-tts without dependencies to avoid triggering torch upgrade
+# 4. Manually install qwen-tts dependencies that are missing (excluding torch)
+RUN sed -i '/torch/d' requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --no-deps qwen-tts>=0.0.5 && \
+    pip install --no-cache-dir transformers accelerate gradio librosa
 
 # Copy application code
 COPY . .

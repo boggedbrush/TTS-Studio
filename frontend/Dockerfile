@@ -7,6 +7,10 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# Set backend URL for Docker networking (used by Next.js rewrites at build time)
+ENV BACKEND_URL=http://backend:8000
+
 RUN npm run build
 
 # Stage 2: Production

@@ -1,0 +1,14 @@
+# NVIDIA GPU (CUDA) configuration
+# Usage: docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up --build
+
+services:
+  backend:
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
