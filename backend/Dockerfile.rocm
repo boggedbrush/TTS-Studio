@@ -13,11 +13,11 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install dependencies strictly avoiding torch upgrades
-# 1. Remove torch/torchvision/torchaudio from requirements.txt
+# 1. Remove torch/torchvision/torchaudio/flash-attn from requirements.txt
 # 2. Install remaining requirements
 # 3. Install qwen-tts without dependencies to avoid triggering torch upgrade
 # 4. Manually install qwen-tts dependencies that are missing (excluding torch)
-RUN sed -i '/torch/d' requirements.txt && \
+RUN sed -i '/torch/d;/flash-attn/d' requirements.txt && \
     pip install --no-cache-dir -r requirements.txt && \
     pip install --no-cache-dir --no-deps qwen-tts>=0.0.5 && \
     pip install --no-cache-dir transformers accelerate gradio librosa
