@@ -9,11 +9,13 @@ import { StatusBarWrapper } from "@/components/status-bar-wrapper";
 const inter = Inter({
     subsets: ["latin"],
     variable: "--font-inter",
+    display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
     subsets: ["latin"],
     variable: "--font-mono",
+    display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -45,6 +47,7 @@ export default function RootLayout({
         <html lang="en" suppressHydrationWarning>
             <body
                 className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
+                suppressHydrationWarning
             >
                 <ThemeProvider
                     attribute="class"
