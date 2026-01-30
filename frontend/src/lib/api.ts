@@ -1,8 +1,15 @@
 import type { VoiceDesignInput, VoiceCloneInput, CustomVoiceInput } from "./validators";
 
-// In production/Docker, we call the backend directly to avoid proxy timeouts
+// Use the current hostname so clients on LAN can access the backend
 // The backend is exposed on port 8000
-const API_BASE = typeof window !== "undefined" ? "http://localhost:8000/api" : "/api";
+const getApiBase = () => {
+    if (typeof window === "undefined") return "/api";
+    // Use same hostname as the browser but point to backend port
+    const hostname = window.location.hostname;
+    return `http://${hostname}:8000/api`;
+};
+
+const API_BASE = getApiBase();
 
 export interface GenerationResult {
     audio: Blob;
