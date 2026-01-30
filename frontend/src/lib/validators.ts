@@ -15,15 +15,16 @@ export const LANGUAGES = [
 ] as const;
 
 // Speakers for CustomVoice mode
+// Ordered by English fluency: native speakers first, then accented speakers
 export const SPEAKERS = [
     { value: "Aiden", label: "Aiden", gender: "male", language: "English" },
-    { value: "Dylan", label: "Dylan", gender: "male", language: "English" },
-    { value: "Eric", label: "Eric", gender: "male", language: "English" },
-    { value: "Ono_anna", label: "Ono Anna", gender: "female", language: "Japanese" },
     { value: "Ryan", label: "Ryan", gender: "male", language: "English" },
-    { value: "Serena", label: "Serena", gender: "female", language: "English" },
+    { value: "Dylan", label: "Dylan (CN accent)", gender: "male", language: "English" },
+    { value: "Eric", label: "Eric (CN accent)", gender: "male", language: "English" },
+    { value: "Serena", label: "Serena (CN accent)", gender: "female", language: "English" },
+    { value: "Ono_anna", label: "Ono Anna", gender: "female", language: "Japanese" },
     { value: "Sohee", label: "Sohee", gender: "female", language: "Korean" },
-    { value: "Uncle_fu", label: "Uncle Fu", gender: "male", language: "Chinese" },
+    { value: "Uncle_fu", label: "Uncle Fu (老人)", gender: "male", language: "Chinese" },
     { value: "Vivian", label: "Vivian", gender: "female", language: "Chinese" },
 ] as const;
 

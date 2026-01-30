@@ -236,17 +236,17 @@ curl -X POST http://localhost:8000/api/voice-design \
 
 ## 🎙️ Available Speakers (Custom Voice)
 
-| Speaker | Gender | Native Language |
-|---------|--------|-----------------|
-| Vivian | Female | Chinese |
-| Uncle Fu | Male | Chinese |
-| Serena | Female | English |
-| Ryan | Male | English |
-| Aiden | Male | English |
-| Dylan | Male | English |
-| Eric | Male | English |
-| Ono Anna | Female | Japanese |
-| Sohee | Female | Korean |
+| Speaker | Gender | Native Language | Notes |
+|---------|--------|-----------------|-------|
+| Aiden | Male | English | Native fluency |
+| Ryan | Male | English | Native fluency |
+| Dylan | Male | English | Chinese accent |
+| Eric | Male | English | Chinese accent |
+| Serena | Female | English | Chinese accent |
+| Ono Anna | Female | Japanese | |
+| Sohee | Female | Korean | |
+| Uncle Fu | Male | Chinese | Old man voice |
+| Vivian | Female | Chinese | |
 
 ## 🔧 Configuration
 
