@@ -47,6 +47,20 @@ if ($IsVerbose) {
 try {
     $pythonVersion = python --version 2>&1
     Write-Log "[OK] $pythonVersion found" -Color Green
+
+    # Check for Python 3.13+ or 32-bit (common issues with PyTorch)
+    $pyInfo = python -c "import sys, struct; print(sys.version_info.major, sys.version_info.minor, struct.calcsize('P') * 8)" 2>&1
+    if ($LASTEXITCODE -eq 0) {
+        $major, $minor, $bits = $pyInfo -split " "
+        if ([int]$major -eq 3 -and [int]$minor -ge 13) {
+            Write-Log "[WARN] You are using Python $major.$minor. PyTorch may not support this version yet." -Color Yellow
+            Write-Log "       If installation fails, try installing Python 3.10, 3.11 or 3.12." -Color Yellow
+        }
+        if ([int]$bits -eq 32) {
+            Write-Log "[WARN] You are using 32-bit Python. PyTorch requires 64-bit Python." -Color Yellow
+            Write-Log "       Please install 64-bit Python." -Color Yellow
+        }
+    }
 } catch {
     Write-Error-Always "[ERROR] Python 3 is required but not installed."
     Write-Host "Download from: https://www.python.org/downloads/" -ForegroundColor Yellow
@@ -111,7 +125,7 @@ if (-not (Test-Path "venv")) {
     Invoke-Quiet { python -m venv venv }
 }
 
-& ".\venv\Scripts\Activate.ps1"
+. ".\venv\Scripts\Activate.ps1"
 
 # Install PyTorch with appropriate backend
 Write-Log "Installing dependencies..."
@@ -120,6 +134,14 @@ Invoke-Quiet { python -m pip install --upgrade pip }
 if ($gpuType -eq "cuda") {
     Write-Log "Installing PyTorch with CUDA support..." -Color Cyan
     Invoke-Quiet { pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error-Always "[ERROR] Failed to install PyTorch."
+        Write-Host "Possible causes:" -ForegroundColor Yellow
+        Write-Host "1. Python version too new (use 3.10-3.12)" -ForegroundColor Yellow
+        Write-Host "2. 32-bit Python (use 64-bit)" -ForegroundColor Yellow
+        Write-Host "3. Network issues" -ForegroundColor Yellow
+        exit 1
+    }
 } elseif ($gpuType -eq "directml") {
     Write-Log "Installing PyTorch with DirectML support..." -Color Cyan
     Invoke-Quiet { pip install torch torchvision torchaudio }
@@ -164,9 +186,9 @@ Write-Host ""
 # Start backend in a new PowerShell window (quiet mode)
 Set-Location "$ProjectDir\backend"
 if ($IsVerbose) {
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "& { Set-Location '$ProjectDir\backend'; & '.\venv\Scripts\Activate.ps1'; python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 }"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", "& { Set-Location '$ProjectDir\backend'; . '.\venv\Scripts\Activate.ps1'; python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 }"
 } else {
-    Start-Process powershell -ArgumentList "-WindowStyle", "Hidden", "-Command", "& { Set-Location '$ProjectDir\backend'; & '.\venv\Scripts\Activate.ps1'; python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 }" -WindowStyle Hidden
+    Start-Process powershell -ArgumentList "-WindowStyle", "Hidden", "-Command", "& { Set-Location '$ProjectDir\backend'; . '.\venv\Scripts\Activate.ps1'; python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 }" -WindowStyle Hidden
 }
 
 # Start frontend in current window
