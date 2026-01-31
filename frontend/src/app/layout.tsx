@@ -3,7 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
-import { Header } from "@/components/header";
+import { HeaderClient } from "@/components/header-client";
 import { StatusBarWrapper } from "@/components/status-bar-wrapper";
 
 const inter = Inter({
@@ -44,10 +44,14 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="en" suppressHydrationWarning data-darkreader-ignore>
+            <head>
+                <meta name="darkreader-lock" />
+            </head>
             <body
                 className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
                 suppressHydrationWarning
+                data-darkreader-ignore
             >
                 <ThemeProvider
                     attribute="class"
@@ -62,7 +66,7 @@ export default function RootLayout({
                             <div className="absolute -bottom-[40%] -right-[20%] h-[80%] w-[60%] rounded-full bg-accent/5 blur-3xl" />
                         </div>
 
-                        <Header />
+                        <HeaderClient />
                         <main className="container mx-auto px-4 py-8">{children}</main>
                     </div>
                     <StatusBarWrapper />

@@ -74,7 +74,36 @@ async def transcribe_audio(
                 tensor = torch.mean(tensor, dim=0, keepdim=True)
             
             # Convert to numpy array (1D)
-            audio_array = tensor.squeeze().numpy()
+            audio_array = tensor.squeeze().numpy().astype(np.float32, copy=False)
+            if audio_array.size == 0:
+                raise ValueError("Empty audio buffer")
+
+            # Clean up any non-finite values and normalize if needed
+            if not np.isfinite(audio_array).all():
+                audio_array = np.nan_to_num(audio_array)
+            peak = float(np.max(np.abs(audio_array)))
+            rms = float(np.sqrt(np.mean(np.square(audio_array))))
+            if peak > 1.0:
+                audio_array = audio_array / peak
+                peak = float(np.max(np.abs(audio_array)))
+                rms = float(np.sqrt(np.mean(np.square(audio_array))))
+
+            # Auto-gain if the signal is very quiet
+            if rms > 0 and rms < 0.01:
+                target_rms = 0.05
+                gain = min(target_rms / rms, 10.0)
+                audio_array = np.clip(audio_array * gain, -1.0, 1.0)
+                peak = float(np.max(np.abs(audio_array)))
+                rms = float(np.sqrt(np.mean(np.square(audio_array))))
+
+            duration = audio_array.shape[0] / sample_rate
+            logger.info(
+                "Transcription audio stats: duration=%.2fs, sample_rate=%d, peak=%.4f, rms=%.4f",
+                duration,
+                sample_rate,
+                peak,
+                rms,
+            )
             
             # Transcribe
             text = transcription_manager.transcribe(

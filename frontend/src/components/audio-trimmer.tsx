@@ -171,6 +171,8 @@ export function AudioTrimmer({
                     barRadius: 2,
                     height: 128,
                     normalize: true,
+                    // Override WaveSurfer's 8k default to avoid low-quality resampling.
+                    sampleRate: 48000,
                     backend: "WebAudio",
                 });
 
@@ -210,23 +212,33 @@ export function AudioTrimmer({
                 ws.on("ready", () => {
                     isLoadingRef.current = false;
                     console.log("[AudioTrimmer] WaveSurfer ready event fired, duration:", ws.getDuration());
+                    if (isDestroyed || !regionsRef.current) {
+                        return;
+                    }
                     setLoadError(null);
                     const dur = ws.getDuration();
+                    if (!Number.isFinite(dur) || dur <= 0) {
+                        return;
+                    }
                     setDuration(dur);
 
                     // Add a default region covering the whole track (or max duration)
-                    wsRegions.clearRegions();
-                    const initialEnd = maxDuration ? Math.min(dur, maxDuration) : dur;
+                    try {
+                        wsRegions.clearRegions();
+                        const initialEnd = maxDuration ? Math.min(dur, maxDuration) : dur;
 
-                    const region = wsRegions.addRegion({
-                        start: 0,
-                        end: initialEnd,
-                        color: "rgba(236, 72, 153, 0.2)", // Pinkish
-                        drag: true,
-                        resize: true,
-                    });
-                    updateRegionState(region);
-                    ensureRegionHandles(region);
+                        const region = wsRegions.addRegion({
+                            start: 0,
+                            end: initialEnd,
+                            color: "rgba(236, 72, 153, 0.2)", // Pinkish
+                            drag: true,
+                            resize: true,
+                        });
+                        updateRegionState(region);
+                        ensureRegionHandles(region);
+                    } catch (err) {
+                        console.warn("AudioTrimmer: failed to initialize trim region", err);
+                    }
                 });
 
                 ws.on("timeupdate", (time) => {
@@ -408,15 +420,7 @@ export function AudioTrimmer({
             const activeRegion = regions[0];
             const arrayBuffer = await audioFile.arrayBuffer();
             audioContext = new AudioContext(); // New context for processing
-            const waveSurferWithDecode = wavesurferRef.current as unknown as {
-                getDecodedData?: () => AudioBuffer | null;
-            };
-            const decodedFromWaveSurfer =
-                typeof waveSurferWithDecode.getDecodedData === "function"
-                    ? waveSurferWithDecode.getDecodedData()
-                    : null;
-            const audioBuffer = decodedFromWaveSurfer ??
-                (await audioContext.decodeAudioData(arrayBuffer));
+            const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
 
             // Calculate start/end frames
             // Safeguard bounds
@@ -454,17 +458,19 @@ export function AudioTrimmer({
                 }
             }
 
-            const wavBlob = audioBufferToWav(newBuffer);
+            const outputBlob = audioBufferToWav(newBuffer, { float32: true });
+            const outputMime = "audio/wav";
 
             // Preserve original filename if possible, or append -trimmed
-            let name = "trimmed-audio.wav";
+            const extension = "wav";
+            let name = `trimmed-audio.${extension}`;
             if (audioFile instanceof File) {
                 const namePart = audioFile.name.replace(/\.[^/.]+$/, "");
-                name = `${namePart}-trimmed.wav`;
+                name = `${namePart}-trimmed.${extension}`;
             }
 
-            const trimmedFile = new File([wavBlob], name, {
-                type: "audio/wav",
+            const trimmedFile = new File([outputBlob], name, {
+                type: outputMime,
             });
 
             onTrim(trimmedFile);

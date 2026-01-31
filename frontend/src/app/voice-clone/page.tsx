@@ -37,6 +37,7 @@ export default function VoiceClonePage() {
     const [inputMode, setInputMode] = React.useState<"file" | "mic">("file");
 
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const transcribeRequestIdRef = React.useRef(0);
 
     const [isTrimming, setIsTrimming] = React.useState(false);
     const [isTranscribing, setIsTranscribing] = React.useState(false);
@@ -65,6 +66,7 @@ export default function VoiceClonePage() {
             return;
         }
 
+        transcribeRequestIdRef.current += 1;
         setRefAudio(file);
         setRefText("");
         const url = URL.createObjectURL(file);
@@ -156,6 +158,7 @@ export default function VoiceClonePage() {
     };
 
     const removeRefAudio = () => {
+        transcribeRequestIdRef.current += 1;
         setRefAudio(null);
         if (refAudioUrl) {
             URL.revokeObjectURL(refAudioUrl);
@@ -164,6 +167,7 @@ export default function VoiceClonePage() {
     };
 
     const handleTrimComplete = (trimmedFile: File) => {
+        transcribeRequestIdRef.current += 1;
         // Revoke old URL
         if (refAudioUrl) URL.revokeObjectURL(refAudioUrl);
 
@@ -189,9 +193,12 @@ export default function VoiceClonePage() {
             return;
         }
 
+        const requestId = transcribeRequestIdRef.current + 1;
+        transcribeRequestIdRef.current = requestId;
         setIsTranscribing(true);
         try {
             const transcript = await apiClient.transcribeAudio(refAudio, language);
+            if (requestId !== transcribeRequestIdRef.current) return;
             setRefText(transcript);
             toast({
                 title: "Transcription Complete",
@@ -199,13 +206,16 @@ export default function VoiceClonePage() {
                 variant: "success",
             });
         } catch (error) {
+            if (requestId !== transcribeRequestIdRef.current) return;
             toast({
                 title: "Transcription Failed",
                 description: error instanceof Error ? error.message : "Unknown error",
                 variant: "destructive",
             });
         } finally {
-            setIsTranscribing(false);
+            if (requestId === transcribeRequestIdRef.current) {
+                setIsTranscribing(false);
+            }
         }
     }, [refAudio, language]);
 

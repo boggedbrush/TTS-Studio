@@ -65,11 +65,12 @@ class TranscriptionManager:
                     from transformers import pipeline
 
                     # Use whisper-base for good balance of speed and accuracy
+                    dtype = torch.float16 if self._device.startswith("cuda") else torch.float32
                     self._pipeline = pipeline(
                         "automatic-speech-recognition",
                         model="openai/whisper-base",
                         device=self._device,
-                        torch_dtype=torch.float16 if self._device != "cpu" else torch.float32,
+                        torch_dtype=dtype,
                     )
                     
                     logger.info("Whisper model loaded successfully")
@@ -111,7 +112,7 @@ class TranscriptionManager:
             
             # Build generation kwargs
             generate_kwargs = {
-                "return_timestamps": True
+                "task": "transcribe",
             }
             if language:
                 # Map common language names to codes
@@ -130,9 +131,28 @@ class TranscriptionManager:
                 lang_code = lang_map.get(language, language.lower()[:2] if len(language) >= 2 else None)
                 if lang_code:
                     generate_kwargs["language"] = lang_code
-            
-            result = pipe(audio_input, generate_kwargs=generate_kwargs)
-            text = result["text"].strip()
+
+            # First try a straightforward transcription (most reliable for short clips)
+            result = pipe(
+                audio_input,
+                return_timestamps=False,
+                generate_kwargs=generate_kwargs,
+            )
+
+            text = result.get("text", "").strip()
+
+            # If text is empty/too short, fall back to chunked decoding
+            if len(text) < 3:
+                chunked = pipe(
+                    audio_input,
+                    chunk_length_s=15,
+                    stride_length_s=3,
+                    return_timestamps=False,
+                    generate_kwargs=generate_kwargs,
+                )
+                chunk_text = chunked.get("text", "").strip()
+                if len(chunk_text) > len(text):
+                    text = chunk_text
             
             logger.info(f"Transcription complete: {len(text)} characters")
             status_manager.success("Transcription complete")
