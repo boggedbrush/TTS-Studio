@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Moon, Sun, Mic2, Menu, X } from "lucide-react";
+import { Moon, Sun, Menu, X } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,8 +31,15 @@ export function Header() {
             <div className="container mx-auto flex h-16 items-center justify-between px-4 md:grid md:grid-cols-[1fr_auto_1fr]">
                 {/* Logo */}
                 <Link href="/" className="flex min-w-0 items-center gap-3 group">
-                    <div className="relative flex h-9 w-9 md:h-10 md:w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg shadow-primary/25 transition-transform group-hover:scale-105">
-                        <Mic2 className="h-5 w-5 text-white" />
+                    <div className="relative flex h-9 w-9 md:h-10 md:w-10 items-center justify-center transition-transform group-hover:scale-105">
+                        <Image
+                            src="/favicon.svg"
+                            alt="TTS Studio logo"
+                            width={40}
+                            height={40}
+                            className="h-9 w-9 md:h-10 md:w-10 rounded-xl shadow-[0_0_16px_rgba(124,59,237,0.35)]"
+                            priority
+                        />
                     </div>
                     <div className="flex min-w-0 flex-col">
                         <span className="truncate text-base font-bold tracking-tight md:text-lg">
