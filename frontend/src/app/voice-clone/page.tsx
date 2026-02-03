@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Upload, Mic, Info, X, FileAudio, Wand2, Scissors, Sparkles, Loader2 } from "lucide-react";
+import Image from "next/image";
+import { Upload, Info, X, FileAudio, Wand2, Scissors, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -306,8 +307,14 @@ export default function VoiceClonePage() {
                 className="mb-8"
             >
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg">
-                        <Mic className="h-5 w-5 text-white" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl">
+                        <Image
+                            src="/icons/voice-clone.svg"
+                            alt="Voice Clone"
+                            width={28}
+                            height={28}
+                            className="h-7 w-7 brightness-125 saturate-125 drop-shadow-[0_0_6px_rgba(255,255,255,0.55)]"
+                        />
                     </div>
                     <div>
                         <h1 className="text-2xl font-bold">Voice Clone</h1>

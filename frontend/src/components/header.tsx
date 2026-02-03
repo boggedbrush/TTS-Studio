@@ -11,9 +11,21 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navigation = [
-    { name: "Voice Design", href: "/voice-design", icon: "✨" },
-    { name: "Voice Clone", href: "/voice-clone", icon: "🎭" },
-    { name: "Custom Voice", href: "/custom-voice", icon: "🎤" },
+    {
+        name: "Voice Design",
+        href: "/voice-design",
+        iconSrc: "/icons/voice-design.svg",
+    },
+    {
+        name: "Voice Clone",
+        href: "/voice-clone",
+        iconSrc: "/icons/voice-clone.svg",
+    },
+    {
+        name: "Custom Voice",
+        href: "/custom-voice",
+        iconSrc: "/icons/voice-custom.svg",
+    },
 ];
 
 export function Header() {
@@ -75,7 +87,13 @@ export function Header() {
                                         />
                                     )}
                                     <span className="relative z-10 flex items-center gap-2">
-                                        <span>{item.icon}</span>
+                                        <Image
+                                            src={item.iconSrc}
+                                            alt={`${item.name} icon`}
+                                            width={32}
+                                            height={32}
+                                            className="h-8 w-8"
+                                        />
                                         {item.name}
                                     </span>
                                 </motion.div>
@@ -143,7 +161,13 @@ export function Header() {
                                             : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                                     )}
                                 >
-                                    <span className="text-lg">{item.icon}</span>
+                                    <Image
+                                        src={item.iconSrc}
+                                        alt={`${item.name} icon`}
+                                        width={20}
+                                        height={20}
+                                        className="h-5 w-5"
+                                    />
                                     <span className="font-medium">{item.name}</span>
                                 </Link>
                             );

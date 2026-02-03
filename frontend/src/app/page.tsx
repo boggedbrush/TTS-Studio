@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Mic, Users, Zap, Globe2, Clock, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ const modes = [
         title: "Voice Design",
         description:
             "Create entirely new voices from natural language descriptions. Describe the voice you want and let AI bring it to life.",
-        icon: "✨",
+        iconSrc: "/icons/voice-design.svg",
         href: "/voice-design",
         gradient: "from-violet-500 to-purple-600",
         features: ["Natural language control", "Unlimited creativity", "No reference audio needed"],
@@ -20,7 +21,7 @@ const modes = [
         title: "Voice Clone",
         description:
             "Clone any voice from a short audio sample. Upload reference audio and generate new speech in that voice.",
-        icon: "🎭",
+        iconSrc: "/icons/voice-clone.svg",
         href: "/voice-clone",
         gradient: "from-pink-500 to-rose-600",
         features: ["Clone from ~10s audio", "High fidelity output", "Speaker embedding support"],
@@ -29,7 +30,7 @@ const modes = [
         title: "Custom Voice",
         description:
             "Use pre-trained premium voices with style instructions. Choose from 9 distinct speakers across multiple languages.",
-        icon: "🎤",
+        iconSrc: "/icons/voice-custom.svg",
         href: "/custom-voice",
         gradient: "from-amber-500 to-orange-600",
         features: ["9 premium speakers", "Style control", "10+ languages supported"],
@@ -173,7 +174,15 @@ export default function HomePage() {
 
                                     <div className="relative">
                                         {/* Icon */}
-                                        <div className="text-4xl mb-4">{mode.icon}</div>
+                                        <div className="mb-4">
+                                            <Image
+                                                src={mode.iconSrc}
+                                                alt={`${mode.title} icon`}
+                                                width={36}
+                                                height={36}
+                                                className="h-9 w-9"
+                                            />
+                                        </div>
 
                                         {/* Title */}
                                         <h3 className="text-xl font-bold mb-2 group-hover:text-primary transition-colors">
