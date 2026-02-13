@@ -1,14 +1,19 @@
 # Qwen3-TTS Native Run Script for Windows (PowerShell)
 # Supports: CUDA (NVIDIA), DirectML (AMD/Intel), and CPU
+# Usage: ./run-windows.ps1 [-Verbose|-v] [-Dev|-d]
 
 param(
     [switch]$Verbose,
     [Alias("v")]
-    [switch]$VerboseShort
+    [switch]$VerboseShort,
+    [switch]$Dev,
+    [Alias("d")]
+    [switch]$DevShort
 )
 
 $ErrorActionPreference = "Stop"
 $IsVerbose = $Verbose -or $VerboseShort
+$IsDev = $Dev -or $DevShort
 
 # Helper functions
 function Write-Log {
@@ -162,6 +167,15 @@ if (-not (Test-Path "node_modules")) {
     Invoke-Quiet { npm install }
 }
 
+if (-not $IsDev) {
+    Write-Log "Building frontend for production..." -Color Cyan
+    Invoke-Quiet { npm run build }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error-Always "[ERROR] Frontend production build failed."
+        exit 1
+    }
+}
+
 # Start services - status bar always shown
 Write-Host ""
 Write-Host "=========================================" -ForegroundColor Cyan
@@ -170,6 +184,11 @@ Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "  Frontend: http://localhost:3000" -ForegroundColor White
 Write-Host "  Backend:  http://localhost:8000" -ForegroundColor White
+if ($IsDev) {
+    Write-Host "  Mode:     development (--dev)" -ForegroundColor Yellow
+} else {
+    Write-Host "  Mode:     production (default)" -ForegroundColor Green
+}
 Write-Host ""
 if ($gpuType -eq "cuda") {
     Write-Host "  NVIDIA GPU acceleration enabled" -ForegroundColor Green
@@ -193,8 +212,16 @@ if ($IsVerbose) {
 
 # Start frontend in current window
 Set-Location "$ProjectDir\frontend"
-if ($IsVerbose) {
-    npm run dev
+if ($IsDev) {
+    if ($IsVerbose) {
+        npm run dev
+    } else {
+        npm run dev *> $null
+    }
 } else {
-    npm run dev *> $null
+    if ($IsVerbose) {
+        npm run start
+    } else {
+        npm run start *> $null
+    }
 }

@@ -20,6 +20,7 @@ from fastapi.responses import Response, JSONResponse
 
 from app.routers import voice_design, voice_clone, custom_voice, status, transcription
 from app.services.tts_manager import tts_manager
+from app.services.transcription_manager import transcription_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -46,7 +47,8 @@ async def lifespan(app: FastAPI):
     
     # Cleanup on shutdown
     logger.info("Shutting down Qwen3-TTS API Server...")
-    tts_manager.unload_all()
+    tts_manager.shutdown()
+    transcription_manager.shutdown()
 
 
 app = FastAPI(

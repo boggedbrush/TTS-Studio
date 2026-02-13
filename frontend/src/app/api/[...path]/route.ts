@@ -19,11 +19,16 @@ const buildHeaders = (request: NextRequest) => {
     return headers;
 };
 
+type RouteContext = {
+    params: Promise<{ path: string[] }>;
+};
+
 const proxyRequest = async (
     request: NextRequest,
-    { params }: { params: { path?: string[] } },
+    context: RouteContext,
 ) => {
-    const targetUrl = buildTargetUrl(request, params.path);
+    const { path } = await context.params;
+    const targetUrl = buildTargetUrl(request, path);
     const headers = buildHeaders(request);
 
     const init: RequestInit & { duplex?: "half" } = {

@@ -15,10 +15,14 @@ NC='\033[0m' # No Color
 
 # Parse arguments
 VERBOSE=false
+DEV_MODE=false
 for arg in "$@"; do
     case $arg in
         --verbose|-v)
             VERBOSE=true
+            ;;
+        --dev)
+            DEV_MODE=true
             ;;
     esac
 done
@@ -169,6 +173,11 @@ if [ ! -d "node_modules" ]; then
     run_quiet npm install
 fi
 
+if [ "$DEV_MODE" = false ]; then
+    log "Building production frontend..."
+    run_stderr_only npm run build
+fi
+
 # Start services
 log ""
 log "🚀 Starting services..."
@@ -185,10 +194,18 @@ BACKEND_PID=$!
 
 # Start frontend in background
 cd "$PROJECT_DIR/frontend"
-if [ "$VERBOSE" = true ]; then
-    npm run dev 2>&1 &
+if [ "$DEV_MODE" = true ]; then
+    if [ "$VERBOSE" = true ]; then
+        npm run dev 2>&1 &
+    else
+        npm run dev > /dev/null 2>&1 &
+    fi
 else
-    npm run dev > /dev/null 2>&1 &
+    if [ "$VERBOSE" = true ]; then
+        npm run start 2>&1 &
+    else
+        npm run start > /dev/null 2>&1 &
+    fi
 fi
 FRONTEND_PID=$!
 
@@ -219,6 +236,11 @@ print_status() {
     echo "   Local:   http://localhost:3000"
     echo "   LAN:     http://$LOCAL_IP:3000"
     echo "   API:     http://$LOCAL_IP:8000"
+    if [ "$DEV_MODE" = true ]; then
+        echo "   Mode:    development (--dev)"
+    else
+        echo "   Mode:    production (default)"
+    fi
     echo ""
     if [ "$GPU_TYPE" == "cuda" ]; then
         echo -e "   ${GREEN}🎮 NVIDIA GPU acceleration enabled${NC}"
@@ -237,4 +259,3 @@ print_status
 
 # Wait for both processes
 wait
-

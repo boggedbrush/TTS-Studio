@@ -278,9 +278,7 @@ export default function VoiceClonePage() {
 
         checkAndTranscribe();
 
-        // We only want to auto-transcribe when the audio file changes,
-        // not when language changes (to preserve manual edits if language is toggled)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // We only auto-transcribe when the reference audio or mode changes.
     }, [refAudio, xVectorOnly]);
 
     // Clean up URLs on unmount

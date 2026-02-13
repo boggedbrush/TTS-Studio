@@ -7,11 +7,14 @@ Supports lazy loading and GPU acceleration.
 
 import logging
 import threading
-import tempfile
+import time
+import gc
 from typing import Optional
 
 import torch
 import numpy as np
+
+from app.config import MODEL_IDLE_TIMEOUT_S
 
 logger = logging.getLogger(__name__)
 
@@ -37,9 +40,25 @@ class TranscriptionManager:
         self._pipeline = None
         self._model_lock = threading.Lock()
         self._device = self._detect_device()
+        self._last_used: float | None = None
+        self._idle_timeout_s = max(0, MODEL_IDLE_TIMEOUT_S)
+        self._cleanup_interval_s = max(30, min(300, self._idle_timeout_s // 6)) if self._idle_timeout_s else 0
+        self._stop_cleanup = threading.Event()
+        self._cleanup_thread: Optional[threading.Thread] = None
+        if self._idle_timeout_s > 0:
+            self._cleanup_thread = threading.Thread(
+                target=self._cleanup_loop,
+                name="transcription-model-cleanup",
+                daemon=True,
+            )
+            self._cleanup_thread.start()
         self._initialized = True
 
-        logger.info(f"Transcription Manager initialized. Device: {self._device}")
+        logger.info(
+            "Transcription Manager initialized. Device: %s, idle_timeout_s: %s",
+            self._device,
+            self._idle_timeout_s,
+        )
 
     def _detect_device(self) -> str:
         """Detect the best available compute device."""
@@ -91,7 +110,43 @@ class TranscriptionManager:
                     status_manager.error(f"Failed to load transcription model: {e}")
                     raise
 
+            self._last_used = time.monotonic()
             return self._pipeline
+
+    def _clear_device_cache(self):
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+        elif (
+            hasattr(torch, "mps")
+            and hasattr(torch.mps, "empty_cache")
+            and hasattr(torch.backends, "mps")
+            and torch.backends.mps.is_available()
+        ):
+            torch.mps.empty_cache()
+
+    def _unload_locked(self) -> bool:
+        if self._pipeline is None:
+            return False
+        del self._pipeline
+        self._pipeline = None
+        self._last_used = None
+        return True
+
+    def _cleanup_loop(self):
+        while not self._stop_cleanup.wait(self._cleanup_interval_s):
+            should_unload = False
+            now = time.monotonic()
+            with self._model_lock:
+                if (
+                    self._pipeline is not None
+                    and self._last_used is not None
+                    and (now - self._last_used) >= self._idle_timeout_s
+                ):
+                    should_unload = self._unload_locked()
+            if should_unload:
+                self._clear_device_cache()
+                logger.info("Unloaded idle transcription model after %ss", self._idle_timeout_s)
 
     def transcribe(
         self,
@@ -175,14 +230,17 @@ class TranscriptionManager:
     def unload(self):
         """Unload the model to free memory."""
         with self._model_lock:
-            if self._pipeline is not None:
-                del self._pipeline
-                self._pipeline = None
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
-                elif hasattr(torch, 'mps') and torch.mps.is_available():
-                    torch.mps.empty_cache()
-                logger.info("Transcription model unloaded")
+            unloaded = self._unload_locked()
+        if unloaded:
+            self._clear_device_cache()
+            logger.info("Transcription model unloaded")
+
+    def shutdown(self):
+        """Stop background cleanup and unload the model."""
+        self._stop_cleanup.set()
+        if self._cleanup_thread and self._cleanup_thread.is_alive():
+            self._cleanup_thread.join(timeout=2.0)
+        self.unload()
 
 
 # Global singleton instance

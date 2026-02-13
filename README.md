@@ -58,28 +58,70 @@ A state-of-the-art text-to-speech web application featuring Voice Design, Voice 
 
 These scripts auto-detect your GPU and set everything up for you:
 
+By default, native scripts run the frontend in **production mode** (`next build` + `next start`).
+Use `--dev` for hot reload development mode.
+
 **Linux:**
 ```bash
 git clone https://github.com/boggedbrush/TTS-Space.git && cd TTS-Space
 ./scripts/run-linux.sh
+# Dev mode (hot reload):
+./scripts/run-linux.sh --dev
 ```
 
 **macOS:**
 ```bash
 git clone https://github.com/boggedbrush/TTS-Space.git && cd TTS-Space
 ./scripts/run-macos.sh
+# Dev mode (hot reload):
+./scripts/run-macos.sh --dev
 ```
 
 **Windows (PowerShell):**
 ```powershell
 git clone https://github.com/boggedbrush/TTS-Space.git; cd TTS-Space
 .\scripts\run-windows.ps1
+# Dev mode (hot reload):
+.\scripts\run-windows.ps1 -Dev
 ```
 
 **Windows (CMD):**
 ```cmd
 git clone https://github.com/boggedbrush/TTS-Space.git && cd TTS-Space
 scripts\run-windows.bat
+REM Dev mode (hot reload):
+scripts\run-windows.bat --dev
+```
+
+### Update Existing Install
+
+Use the update scripts to pull latest code (when your working tree is clean), refresh dependencies, and rebuild the production frontend.
+
+**macOS/Linux:**
+```bash
+./scripts/update.sh
+# Skip frontend build:
+./scripts/update.sh --dev
+# Skip git pull:
+./scripts/update.sh --skip-git
+```
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\update-windows.ps1
+# Skip frontend build:
+.\scripts\update-windows.ps1 -Dev
+# Skip git pull:
+.\scripts\update-windows.ps1 -SkipGit
+```
+
+**Windows (CMD):**
+```cmd
+scripts\update-windows.bat
+REM Skip frontend build:
+scripts\update-windows.bat --dev
+REM Skip git pull:
+scripts\update-windows.bat --skip-git
 ```
 
 ### Option 2: Manual Setup
@@ -221,11 +263,14 @@ TTS-Space/
 │   │   ├── services/        # TTS model manager
 │   │   └── main.py          # FastAPI app
 │   └── requirements.txt
-├── scripts/                  # Native run scripts
+├── scripts/                  # Native run and update scripts
 │   ├── run-linux.sh         # Linux (CUDA/ROCm/CPU)
 │   ├── run-macos.sh         # macOS (MPS/CPU)
 │   ├── run-windows.bat      # Windows CMD
-│   └── run-windows.ps1      # Windows PowerShell
+│   ├── run-windows.ps1      # Windows PowerShell
+│   ├── update.sh            # macOS/Linux updater
+│   ├── update-windows.bat   # Windows CMD updater
+│   └── update-windows.ps1   # Windows PowerShell updater
 ├── docker-compose.yml        # Docker (base config)
 ├── docker-compose.amd.yml    # Docker AMD GPU override
 ├── docker-compose.nvidia.yml # Docker NVIDIA GPU override

@@ -1,17 +1,20 @@
 @echo off
 REM Qwen3-TTS Native Run Script for Windows
 REM Supports: CUDA (NVIDIA), DirectML (AMD/Intel), and CPU
-REM Usage: run-windows.bat [--verbose | -v]
+REM Usage: run-windows.bat [--verbose | -v] [--dev | -d]
 
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_DIR=%SCRIPT_DIR%.."
 set "VERBOSE=0"
+set "DEV_MODE=0"
 
 REM Parse arguments
 :parse_args
 if "%~1"=="" goto :end_parse
 if "%~1"=="--verbose" set "VERBOSE=1"
 if "%~1"=="-v" set "VERBOSE=1"
+if "%~1"=="--dev" set "DEV_MODE=1"
+if "%~1"=="-d" set "DEV_MODE=1"
 shift
 goto :parse_args
 :end_parse
@@ -155,6 +158,19 @@ if not exist "node_modules" (
     )
 )
 
+if %DEV_MODE%==0 (
+    if %VERBOSE%==1 (
+        echo Building frontend for production...
+        call npm run build
+    ) else (
+        call npm run build >nul 2>&1
+    )
+    if errorlevel 1 (
+        echo [ERROR] Frontend production build failed.
+        exit /b 1
+    )
+)
+
 REM Print status bar (always shown)
 echo.
 echo =========================================
@@ -163,6 +179,11 @@ echo =========================================
 echo.
 echo   Frontend: http://localhost:3000
 echo   Backend:  http://localhost:8000
+if %DEV_MODE%==1 (
+    echo   Mode:     development (--dev)
+) else (
+    echo   Mode:     production (default)
+)
 echo.
 if "%GPU_TYPE%"=="cuda" (
     echo   NVIDIA GPU acceleration enabled
@@ -186,10 +207,18 @@ if %VERBOSE%==1 (
 
 REM Start frontend in current window
 cd /d "%PROJECT_DIR%\frontend"
-if %VERBOSE%==1 (
-    call npm run dev
+if %DEV_MODE%==1 (
+    if %VERBOSE%==1 (
+        call npm run dev
+    ) else (
+        call npm run dev >nul 2>&1
+    )
 ) else (
-    call npm run dev >nul 2>&1
+    if %VERBOSE%==1 (
+        call npm run start
+    ) else (
+        call npm run start >nul 2>&1
+    )
 )
 
 pause
